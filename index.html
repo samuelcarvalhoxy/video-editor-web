@@ -7,8 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <!-- FFmpeg WASM (v0.12+) -->
-    <script src="/ffmpeg/ffmpeg.js"></script>
-    <script src="/util/index.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/ffmpeg@0.12.10/dist/umd/ffmpeg.js"></script>
+    <script src="https://unpkg.com/@ffmpeg/util@0.12.1/dist/umd/index.js"></script>
     
     <style>
         .crop-shadow {
@@ -193,11 +193,12 @@
                                 <div class="w-9 h-5 bg-gray-600 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-blue-500"></div>
                             </label>
                         </div>
-                        <div id="crop-presets" class="flex gap-2 mb-2 opacity-50 pointer-events-none transition-opacity">
-                            <button onclick="applyPresetCrop(null)" class="flex-1 py-1 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition">Livre</button>
-                            <button onclick="applyPresetCrop(1)" class="flex-1 py-1 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition" title="Instagram Feed">1:1</button>
-                            <button onclick="applyPresetCrop(16/9)" class="flex-1 py-1 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition" title="YouTube">16:9</button>
-                            <button onclick="applyPresetCrop(9/16)" class="flex-1 py-1 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition" title="TikTok/Reels">9:16</button>
+                        <div id="crop-presets" class="flex flex-wrap gap-2 mb-2 opacity-50 pointer-events-none transition-opacity">
+                            <button onclick="applyPresetCrop(null)" class="flex-auto py-1 px-2 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition">Livre</button>
+                            <button onclick="applyPresetCrop(1)" class="flex-auto py-1 px-2 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition" title="Instagram Feed">1:1</button>
+                            <button onclick="applyPresetCrop(16/9)" class="flex-auto py-1 px-2 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition" title="YouTube">16:9</button>
+                            <button onclick="applyPresetCrop(9/16)" class="flex-auto py-1 px-2 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition" title="TikTok/Reels">9:16</button>
+                            <button onclick="applyPresetCrop(1280/660)" class="flex-auto py-1 px-2 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition" title="Específico">1280x660</button>
                         </div>
                         <p id="crop-info" class="text-xs text-gray-400 bg-gray-900 p-2 rounded border border-gray-700 hidden">
                             Saída: <span id="crop-res" class="text-white font-mono font-bold">Orig</span>
@@ -376,10 +377,10 @@
                 bar.style.width = `${p}%`;
                 text.innerText = `Renderizando arquivo... ${p}% concluído`;
             });
+            const baseURL = 'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd';
             await ffmpeg.load({
-                coreURL: '/ffmpeg/ffmpeg-core.js',
-                wasmURL: '/ffmpeg/ffmpeg-core.wasm',
-                workerURL: '/ffmpeg/814.ffmpeg.js'
+                coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
+                wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
             });
         }
 
