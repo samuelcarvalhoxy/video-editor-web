@@ -198,7 +198,7 @@
                             <button onclick="applyPresetCrop(1)" class="flex-auto py-1 px-2 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition" title="Instagram Feed">1:1</button>
                             <button onclick="applyPresetCrop(16/9)" class="flex-auto py-1 px-2 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition" title="YouTube">16:9</button>
                             <button onclick="applyPresetCrop(9/16)" class="flex-auto py-1 px-2 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition" title="TikTok/Reels">9:16</button>
-                            <button onclick="applyPresetCrop(1280/660)" class="flex-auto py-1 px-2 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition" title="Específico">1280x660</button>
+                            <button onclick="applyPresetCrop(1280/660, 1280, 660)" class="flex-auto py-1 px-2 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition text-cyan-400 font-bold" title="Tamanho Fixo">1280 x 660 px</button>
                         </div>
                         <p id="crop-info" class="text-xs text-gray-400 bg-gray-900 p-2 rounded border border-gray-700 hidden">
                             Saída: <span id="crop-res" class="text-white font-mono font-bold">Orig</span>
@@ -342,6 +342,7 @@
         let videoDuration = 0;
         let videoNaturalWidth = 0;
         let videoNaturalHeight = 0;
+        let exactOutputRes = null; // Nova variável para travar a saída em uma resolução exata
 
         function setStep(step) {
             const s1 = document.getElementById('step-1');
@@ -446,6 +447,8 @@
             zoomSlider.value = 1; timelineContainer.style.width = '100%';
             if(isPreviewLooping) btnPreviewLoop.click();
             
+            exactOutputRes = null; // Limpa a resolução exata no reset
+            
             editorArea.classList.add('hidden');
             uploadArea.classList.remove('hidden');
             document.getElementById('progress-container').classList.add('hidden');
@@ -513,7 +516,9 @@
             checkEncodingWarning();
         });
 
-        window.applyPresetCrop = function(ratio) {
+        window.applyPresetCrop = function(ratio, exactW = null, exactH = null) {
+            exactOutputRes = (exactW && exactH) ? { w: exactW, h: exactH } : null;
+            
             const containerW = cropperOverlay.offsetWidth;
             const containerH = cropperOverlay.offsetHeight;
             let targetW = containerW * 0.9;
@@ -575,6 +580,7 @@
             }
 
             if (isResizingCrop) {
+                exactOutputRes = null; // Remove a trava de resolução caso o usuário redimensione manualmente
                 let newL = startBoxLeft, newT = startBoxTop, newW = startBoxWidth, newH = startBoxHeight;
                 if (currentHandleCrop.includes('e')) newW = Math.min(startBoxWidth + dx, containerW - startBoxLeft);
                 if (currentHandleCrop.includes('s')) newH = Math.min(startBoxHeight + dy, containerH - startBoxTop);
@@ -600,9 +606,14 @@
             const makeEven = (n) => Math.floor(n / 2) * 2;
             const pctW = parseFloat(cropBox.style.width || 80) / 100;
             const pctH = parseFloat(cropBox.style.height || 80) / 100;
-            const outW = makeEven(videoNaturalWidth * pctW);
-            const outH = makeEven(videoNaturalHeight * pctH);
-            cropRes.innerText = `${outW} x ${outH} px`;
+            
+            if (exactOutputRes) {
+                cropRes.innerHTML = `<span class="text-green-400">${exactOutputRes.w} x ${exactOutputRes.h} px (Fixo)</span>`;
+            } else {
+                const outW = makeEven(videoNaturalWidth * pctW);
+                const outH = makeEven(videoNaturalHeight * pctH);
+                cropRes.innerText = `${outW} x ${outH} px`;
+            }
         }
 
 
@@ -837,7 +848,11 @@
 
                 // B. Resolução e Compressão (Scale)
                 const qual = videoQuality.value;
-                if (qual !== "orig") {
+                if (exactOutputRes && toggleCrop.checked) {
+                    needsEncode = true;
+                    // Escala exata para a resolução forçada (ex: 1280x660) ignorando configurações da qualidade
+                    vf.push(`scale=${exactOutputRes.w}:${exactOutputRes.h}`);
+                } else if (qual !== "orig") {
                     needsEncode = true;
                     const maxRes = parseInt(qual); // 1080, 720, 480
                     // Escala inteligente preservando Aspect Ratio original e forçando paridade no codec
