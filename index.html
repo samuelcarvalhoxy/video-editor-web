@@ -882,15 +882,18 @@ vf.push("format=yuv420p");
 
 // Build FFmpeg Args (Atenção à nova ordem -i antes do -ss)
 let commandArgs = [
-'-i', inputName,
-'-ss', start.toString(),
-'-t', duration.toString(),
+    '-ss', start.toString(),
+    '-t', duration.toString(),
+    '-i', inputName,
 ];
 
 // Aplicar Filtros de Vídeo
 if (vf.length > 0 || needsEncode) {
 if(vf.length > 0) commandArgs.push('-vf', vf.join(','));
 commandArgs.push('-c:v', 'libx264', '-preset', 'ultrafast');
+
+// Força o uso de todos os núcleos disponíveis da CPU para a renderização
+    commandArgs.push('-threads', '0');
 
 // Configurar Qualidade (CRF)
 let crf = 23; // Default High
