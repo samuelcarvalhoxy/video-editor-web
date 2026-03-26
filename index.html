@@ -951,54 +951,47 @@ btn.classList.remove('opacity-50');
 });
 
 window.applyNLMCrop = function() {
-    if (!videoDuration || !videoNaturalWidth || !videoNaturalHeight) {
-        showAlert("Vídeo ainda não carregado.");
-        return;
-    }
+    if (!videoDuration || !videoNaturalWidth || !videoNaturalHeight) {
+        showAlert("Vídeo ainda não carregado.");
+        return;
+    }
 
-    // 1. CORTE DE TEMPO (remove 2.5s do final ATUAL)
-    const currentEnd = parseFloat(timeEnd.value);
-    const currentStart = parseFloat(timeStart.value);
-    
-    // Subtrai 2.5s do marcador final, garantindo que não ultrapasse o início
-    const newEnd = Math.max(currentStart + 0.1, currentEnd - 2.5);
-    timeEnd.value = newEnd.toFixed(2);
-    updateDuration();
+    // 1. CORTE DE TEMPO (remove últimos 2.5s)
+    const newEnd = Math.max(0, videoDuration - 2.5);
+    timeEnd.value = newEnd.toFixed(2);
+    updateDuration();
 
-    // Move o vídeo para o novo final para você visualizar que cortou
-    video.currentTime = newEnd;
+    // 2. ATIVAR CROP
+    toggleCrop.checked = true;
+    // Força a atualização da interface (mostra a sombra e a caixa de corte)
+    toggleCrop.dispatchEvent(new Event('change'));
 
-    // 2. ATIVAR CROP DA FORMA CORRETA
-    toggleCrop.checked = true;
-    // Disparar o evento 'change' faz a interface se alinhar automaticamente (resolve a tela apagada)
-    toggleCrop.dispatchEvent(new Event('change'));
+    // 3. DEFINIR RESOLUÇÃO FIXA ALINHADA AO TOPO (1280x660)
+    const targetWidth = 1280;
+    const targetHeight = 660;
 
-    // 3. DEFINIR RESOLUÇÃO FIXA (1280x660 Centralizado)
-    const targetWidth = 1280;
-    const targetHeight = 660;
+    // Garante que a caixa não extrapole caso o vídeo original seja menor que o alvo
+    const safeWidth = Math.min(targetWidth, videoNaturalWidth);
+    const safeHeight = Math.min(targetHeight, videoNaturalHeight);
 
-    // Garante que a caixa não extrapola caso o vídeo seja menor que 1280x660
-    const safeWidth = Math.min(targetWidth, videoNaturalWidth);
-    const safeHeight = Math.min(targetHeight, videoNaturalHeight);
+    // Converte os tamanhos para porcentagem (%)
+    const pctW = safeWidth / videoNaturalWidth;
+    const pctH = safeHeight / videoNaturalHeight;
 
-    // Converte os tamanhos para porcentagem (%)
-    const pctW = safeWidth / videoNaturalWidth;
-    const pctH = safeHeight / videoNaturalHeight;
+    // Centraliza na horizontal (Left), mas fixa no topo (Top = 0)
+    const pctL = (1 - pctW) / 2;
+    const pctT = 0;
 
-    // Calcula o "Left" e "Top" para centralizar a caixa de corte perfeitamente
-    const pctL = (1 - pctW) / 2;
-    const pctT = (1 - pctH) / 2;
+    // Aplica as proporções na caixa de crop
+    cropBox.style.width = `${pctW * 100}%`;
+    cropBox.style.height = `${pctH * 100}%`;
+    cropBox.style.left = `${pctL * 100}%`;
+    cropBox.style.top = `${pctT * 100}%`;
 
-    // Aplica as proporções na caixa de crop
-    cropBox.style.width = `${pctW * 100}%`;
-    cropBox.style.height = `${pctH * 100}%`;
-    cropBox.style.left = `${pctL * 100}%`;
-    cropBox.style.top = `${pctT * 100}%`;
+    updateCropInfo();
+    checkEncodingWarning();
 
-    updateCropInfo();
-    checkEncodingWarning();
-
-    showAlert("Recorte NLM aplicado com sucesso! (2.5s removidos e 1280x660 centralizado)");
+    showAlert("Recorte NLM aplicado com sucesso. Alinhado ao topo, reduzido na parte inferior.");
 };
     
 </script>
