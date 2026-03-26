@@ -201,6 +201,15 @@ Resolução Original: <span id="info-res-original" class="font-bold text-white">
 <button onclick="applyPresetCrop(16/9)" class="flex-1 py-1 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition" title="YouTube">16:9</button>
 <button onclick="applyPresetCrop(9/16)" class="flex-1 py-1 bg-gray-700 hover:bg-gray-600 text-xs rounded border border-gray-600 transition" title="TikTok/Reels">9:16</button>
 </div>
+
+<button onclick="applyNLMCrop()" 
+class="w-full py-2 bg-gradient-to-r from-purple-600 to-indigo-600 hover:opacity-90 text-sm rounded border border-purple-400 transition font-semibold shadow">
+⚡ Recorte NLM (1 clique)
+</button>
+<p class="text-[10px] text-gray-400 mt-1">
+Remove 2.5s do final + ajusta para 1280x660 automaticamente
+</p>
+    
 <p id="crop-info" class="text-xs text-gray-400 bg-gray-900 p-2 rounded border border-gray-700 hidden">
 Saída: <span id="crop-res" class="text-white font-mono font-bold">Orig</span>
 </p>
@@ -940,6 +949,61 @@ btn.disabled = false;
 btn.classList.remove('opacity-50');
 }
 });
+
+window.applyNLMCrop = function() {
+    if (!videoDuration) {
+        showAlert("Carregue um vídeo primeiro.");
+        return;
+    }
+
+    // =========================
+    // 🎬 CORTE DE TEMPO (-2.5s)
+    // =========================
+    const newEnd = Math.max(0, videoDuration - 2.5);
+    timeEnd.value = newEnd.toFixed(2);
+    updateDuration();
+
+    // =========================
+    // ✂️ ATIVAR CROP
+    // =========================
+    toggleCrop.checked = true;
+    cropperOverlay.classList.remove('hidden');
+    cropInfo.classList.remove('hidden');
+    cropPresets.classList.remove('opacity-50', 'pointer-events-none');
+
+    // =========================
+    // 📐 DIMENSÕES FIXAS
+    // =========================
+    const targetWidth = 1280;
+    const targetHeight = 660;
+
+    // Proporção desejada
+    const targetRatio = targetWidth / targetHeight;
+
+    const containerW = cropperOverlay.offsetWidth;
+    const containerH = cropperOverlay.offsetHeight;
+
+    // largura total (100%)
+    const widthPct = 1;
+
+    // altura proporcional
+    const heightPct = (videoNaturalWidth / targetRatio) / videoNaturalHeight;
+
+    // posição: topo fixo (remove de baixo)
+    const topPct = 0;
+    const leftPct = 0;
+
+    cropBox.style.left = `${leftPct * 100}%`;
+    cropBox.style.top = `${topPct * 100}%`;
+    cropBox.style.width = `${widthPct * 100}%`;
+    cropBox.style.height = `${heightPct * 100}%`;
+
+    updateCropInfo();
+    checkEncodingWarning();
+
+    showAlert("Recorte NLM aplicado com sucesso 🚀");
+};    
+    
 </script>
 </body>
 </html>
