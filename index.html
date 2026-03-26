@@ -950,59 +950,48 @@ btn.classList.remove('opacity-50');
 }
 });
 
-window.applyNLMCrop = function() {
-    if (!videoDuration) {
-        showAlert("Carregue um vídeo primeiro.");
+window.applyRecorteNLM = function() {
+    if (!videoDuration || !videoNaturalWidth || !videoNaturalHeight) {
+        showAlert("Vídeo ainda não carregado.");
         return;
     }
 
-    // =========================
-    // 🎬 CORTE DE TEMPO (-2.5s)
-    // =========================
+    // 1. CORTE DE TEMPO (remove últimos 2.5s)
     const newEnd = Math.max(0, videoDuration - 2.5);
     timeEnd.value = newEnd.toFixed(2);
     updateDuration();
 
-    // =========================
-    // ✂️ ATIVAR CROP
-    // =========================
+    // 2. ATIVAR CROP
     toggleCrop.checked = true;
     cropperOverlay.classList.remove('hidden');
     cropInfo.classList.remove('hidden');
     cropPresets.classList.remove('opacity-50', 'pointer-events-none');
 
-    // =========================
-    // 📐 DIMENSÕES FIXAS
-    // =========================
-    const targetWidth = 1280;
+    // 3. DEFINIR RESOLUÇÃO FIXA
+    const targetWidth = videoNaturalWidth;
     const targetHeight = 660;
 
-    // Proporção desejada
-    const targetRatio = targetWidth / targetHeight;
+    // ⚠️ Garante que não extrapola
+    const safeHeight = Math.min(targetHeight, videoNaturalHeight);
 
-    const containerW = cropperOverlay.offsetWidth;
-    const containerH = cropperOverlay.offsetHeight;
+    // Converter para %
+    const pctW = 1;
+    const pctH = safeHeight / videoNaturalHeight;
 
-    // largura total (100%)
-    const widthPct = 1;
+    const pctL = 0;
+    const pctT = 0; // começa do topo
 
-    // altura proporcional
-    const heightPct = (videoNaturalWidth / targetRatio) / videoNaturalHeight;
-
-    // posição: topo fixo (remove de baixo)
-    const topPct = 0;
-    const leftPct = 0;
-
-    cropBox.style.left = `${leftPct * 100}%`;
-    cropBox.style.top = `${topPct * 100}%`;
-    cropBox.style.width = `${widthPct * 100}%`;
-    cropBox.style.height = `${heightPct * 100}%`;
+    // Aplicar
+    cropBox.style.width = `${pctW * 100}%`;
+    cropBox.style.height = `${pctH * 100}%`;
+    cropBox.style.left = `${pctL * 100}%`;
+    cropBox.style.top = `${pctT * 100}%`;
 
     updateCropInfo();
     checkEncodingWarning();
 
-    showAlert("Recorte NLM aplicado com sucesso 🚀");
-};    
+    showAlert("Recorte NLM aplicado com sucesso.");
+};
     
 </script>
 </body>
